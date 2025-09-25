@@ -309,7 +309,7 @@ endfunction
 
 command -bar -nargs=0 Send2TermConfig call s:Send2TermConfig()
 command -bar -nargs=0 Send2TermOpen call s:Send2TermOpen()
-command -bar -nargs=0 Send2TermCmd call s:Send2TermCmd()
+command -bar -nargs=0 Send2TermCmd call s:Send2TermSetCmd()
 command -range -bar -nargs=0 Send2TermSend <line1>,<line2>call s:Send2TermSendRange()
 command -nargs=+ Send2TermSend1 call s:Send2TermSend(<q-args>)
 
