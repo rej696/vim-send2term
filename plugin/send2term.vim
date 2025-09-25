@@ -32,8 +32,8 @@ if !exists("g:send2term_flash_duration")
   let g:send2term_flash_duration = 150
 endif
 
-if !exists("g:send2term_prog")
-  let g:send2term_prog = "bash"
+if !exists("g:send2term_cmd")
+  let g:send2term_cmd = "bash"
 endif
 
 
@@ -71,6 +71,9 @@ function! s:TmuxConfig() abort
   endif
 endfunction
 
+function! s:TmuxOpen() abort
+endfunction
+
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Terminal
@@ -87,7 +90,7 @@ function! s:TerminalOpen()
     if s:send2term_term == -1
         " force terminal split to open below current pane
         :exe "set splitbelow"
-        execute "split term://" . g:send2term_prog
+        execute "split term://" . g:send2term_cmd
         let s:send2term_term = b:terminal_job_id
 
         " Give send2term a moment to start up so following commands can take effect
@@ -106,7 +109,7 @@ function! s:TerminalOpen()
     " Open a Terminal with GHCI with send2term booted.
     if s:send2term_term == -1
       execute "below split"
-      let s:send2term_term = term_start((g:send2term_prog), #{
+      let s:send2term_term = term_start((g:send2term_cmd), #{
             \ term_name: 'send2term',
             \ term_rows: 10,
             \ norestore: 1,
@@ -122,7 +125,8 @@ endfunction
 function! s:TerminalSend(config, text)
   call s:TerminalOpen()
   if has('nvim')
-    call jobsend(s:send2term_term, a:text . "\<CR>")
+    "call jobsend(s:send2term_term, a:text . "\<CR>")
+    call jobsend(s:send2term_term, a:text)
   elseif has('terminal')
     call term_sendkeys(s:send2term_term, a:text . "\<CR>")
   endif
@@ -137,6 +141,10 @@ endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Helpers
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+function! s:Send2TermSetCmd() abort
+  let g:send2term_cmd = input("set command: ", g:send2term_cmd)
+endfunction
 
 function! s:SID()
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
@@ -283,6 +291,12 @@ function! s:Send2TermConfig() abort
   call inputrestore()
 endfunction
 
+function! s:Send2TermOpen() abort
+  call inputsave()
+  call s:Send2TermDispatch('Open')
+  call inputrestore()
+endfunction
+
 " delegation
 function! s:Send2TermDispatch(name, ...)
   let target = substitute(tolower(g:send2term_target), '\(.\)', '\u\1', '') " Capitalize
@@ -294,6 +308,8 @@ endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 command -bar -nargs=0 Send2TermConfig call s:Send2TermConfig()
+command -bar -nargs=0 Send2TermOpen call s:Send2TermOpen()
+command -bar -nargs=0 Send2TermCmd call s:Send2TermCmd()
 command -range -bar -nargs=0 Send2TermSend <line1>,<line2>call s:Send2TermSendRange()
 command -nargs=+ Send2TermSend1 call s:Send2TermSend(<q-args>)
 
@@ -312,6 +328,10 @@ noremap <unique> <script> <silent> <Plug>Send2TermConfig :<c-u>Send2TermConfig<c
 if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
   if !hasmapto('<Plug>Send2TermConfig', 'n')
     nmap <buffer> <leader>sc <Plug>Send2TermConfig
+  endif
+
+  if !hasmapto('<Plug>Send2TermOpen', 'n')
+    nmap <buffer> <leader>so <Plug>Send2TermOpen
   endif
 
   if !hasmapto('<Plug>Send2TermRegionSend', 'x')

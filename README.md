@@ -71,16 +71,18 @@ the lower pane.
 
 ## Configure ##
 
-### Program
+### Command
 
-By default, `vim-send2term` uses bash as the program to launch in the terminal.
-You can either then run your repl program in the bash window, or specify another command to use with `g:send2term_prog`.
+By default, `vim-send2term` uses `bash` as the command to launch in the terminal.
+You can either then run your repl program in the bash window, or specify another command to use with `g:send2term_cmd`.
 
 For example, if you wanted to launch python, you could use:
 
 ```vim
-let g:send2term_prog = "python3"
+let g:send2term_cmd = "python3"
 ```
+
+You could also use `:Send2TermCmd` and enter the command in the text input window there
 
 ### Default bindings ###
 
