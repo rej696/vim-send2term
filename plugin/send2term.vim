@@ -110,7 +110,7 @@ function! s:TerminalToggle()
             endif
         else
             if g:send2term_toggle_default_cmd == 1
-                call TerminalOpen(g:send2term_cmd)
+                call s:TerminalOpen(g:send2term_cmd)
             else
                 call s:TerminalRun()
             endif
