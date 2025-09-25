@@ -80,20 +80,33 @@ endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 let s:send2term_term = -1
+let s:send2term_bufnr = -1
+let s:send2term_cmd = -1
 
 " NVim and VIM8 Terminal Implementation
 " =====================================
-function! s:TerminalOpen()
+function! s:TerminalOpen(cmd)
   if has('nvim')
     let current_win = winnr()
 
-    if s:send2term_term == -1
+    if s:send2term_term == -1 || s:send2term_bufnr == -1
         " force terminal split to open below current pane
         :exe "set splitbelow"
-        execute "split term://" . g:send2term_cmd
+        execute "split term://" . a:cmd
         let s:send2term_term = b:terminal_job_id
+        let s:send2term_bufnr = bufnr('%')
+        let s:send2term_cmd = a:cmd
 
-        " Give send2term a moment to start up so following commands can take effect
+        " Give the terminal a moment to start up so following commands can take effect
+        sleep 500m
+
+        " Make terminal scroll to follow output
+        :exe "normal G"
+        :exe "normal 10\<c-w>_"
+    elseif !bufwinnr(s:send2term_bufnr)
+        execute "sbuffer " . s:send2term_bufnr
+
+        " Give the terminal a moment to start up so following commands can take effect
         sleep 500m
 
         " Make terminal scroll to follow output
@@ -106,15 +119,16 @@ function! s:TerminalOpen()
     " Keep track of the current window number so we can switch back.
     let current_win = winnr()
 
-    " Open a Terminal with GHCI with send2term booted.
+    " Open a Terminal with the command running.
     if s:send2term_term == -1
       execute "below split"
-      let s:send2term_term = term_start((g:send2term_cmd), #{
+      let s:send2term_term = term_start((a:cmd), #{
             \ term_name: 'send2term',
             \ term_rows: 10,
             \ norestore: 1,
             \ curwin: 1,
             \ })
+
     endif
 
     " Return focus to the original window.
@@ -122,8 +136,54 @@ function! s:TerminalOpen()
   endif
 endfunction
 
-function! s:TerminalSend(config, text)
-  call s:TerminalOpen()
+function! s:TerminalRun()
+  let cmd = input("cmd: ", g:send2term_cmd)
+  call s:TerminalOpen(cmd)
+endfunction
+
+function! s:TerminalToggle()
+    if has('nvim')
+        if s:send2term_term != -1 && s:send2term_bufnr != -1
+            if !bufwinnr(s:send2term_bufnr)
+                let current_win = winnr()
+                execute "sbuffer " . s:send2term_bufnr
+
+                " Give the terminal a moment to start up so following commands can take effect
+                sleep 500m
+
+                " Make terminal scroll to follow output
+                :exe "normal G"
+                :exe "normal 10\<c-w>_"
+                execute current_win .. "wincmd w"
+            else
+                execute "close " . s:send2term_bufnr
+            endif
+        else
+            call s:TerminalRun()
+        endif
+  endif
+endfunnction
+
+function! s:TerminalClose()
+  if has('nvim')
+    if s:send2term_term != -1 && s:send2term_bufnr != -1
+        execute "close " . s:send2term_bufnr
+    endif
+
+  endif
+endfunnction
+
+function! s:TerminalQuit()
+  if has('nvim')
+    execute "bd " . s:send2term_bufnr
+    let s:send2term_term = -1
+    let s:send2term_bufnr = -1
+    let s:send2term_cmd = -1
+  endif
+endfunction
+
+function! s:TerminalSend(text)
+  call s:TerminalOpen(g:send2term_cmd)
   if has('nvim')
     "call jobsend(s:send2term_term, a:text . "\<CR>")
     call jobsend(s:send2term_term, a:text)
@@ -132,19 +192,10 @@ function! s:TerminalSend(config, text)
   endif
 endfunction
 
-" These two are unnecessary AFAIK.
-function! s:TerminalPaneNames(A,L,P)
-endfunction
-function! s:TerminalConfig() abort
-endfunction
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Helpers
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-function! s:Send2TermSetCmd() abort
-  let g:send2term_cmd = input("set command: ", g:send2term_cmd)
-endfunction
 
 function! s:SID()
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
@@ -176,16 +227,6 @@ function! s:_EscapeText(text)
   end
 endfunction
 
-function! s:Send2TermGetConfig()
-  if !exists("b:send2term_config")
-    if exists("g:send2term_default_config")
-      let b:send2term_config = g:send2term_default_config
-    else
-      call s:Send2TermDispatch('Config')
-    end
-  end
-endfunction
-
 function! s:Send2TermFlashVisualSelection()
   " Redraw to show current visual selection, and sleep
   redraw
@@ -195,7 +236,6 @@ function! s:Send2TermFlashVisualSelection()
 endfunction
 
 function! s:Send2TermSendOp(type, ...) abort
-  call s:Send2TermGetConfig()
 
   let sel_save = &selection
   let &selection = "inclusive"
@@ -228,7 +268,6 @@ function! s:Send2TermSendOp(type, ...) abort
 endfunction
 
 function! s:Send2TermSendRange() range abort
-  call s:Send2TermGetConfig()
 
   let rv = getreg('"')
   let rt = getregtype('"')
@@ -238,7 +277,6 @@ function! s:Send2TermSendRange() range abort
 endfunction
 
 function! s:Send2TermSendLines(count) abort
-  call s:Send2TermGetConfig()
 
   let rv = getreg('"')
   let rt = getregtype('"')
@@ -277,39 +315,39 @@ endfunction
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 function! s:Send2TermSend(text)
-  call s:Send2TermGetConfig()
-
   let pieces = s:_EscapeText(a:text)
   for piece in pieces
-    call s:Send2TermDispatch('Send', b:send2term_config, piece)
+    call s:TerminalSend(piece)
   endfor
-endfunction
-
-function! s:Send2TermConfig() abort
-  call inputsave()
-  call s:Send2TermDispatch('Config')
-  call inputrestore()
 endfunction
 
 function! s:Send2TermOpen() abort
   call inputsave()
-  call s:Send2TermDispatch('Open')
+  call s:TerminalOpen(g:send2term_cmd)
   call inputrestore()
 endfunction
 
-" delegation
-function! s:Send2TermDispatch(name, ...)
-  let target = substitute(tolower(g:send2term_target), '\(.\)', '\u\1', '') " Capitalize
-  return call("s:" . target . a:name, a:000)
+function! s:Send2TermRun() abort
+  call inputsave()
+  call s:TerminalRun()
+  call inputrestore()
+endfunction
+
+function! s:Send2TermToggle() abort
+  call inputsave()
+  call s:TerminalToggle()
+  call inputrestore()
 endfunction
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Setup key bindings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-command -bar -nargs=0 Send2TermConfig call s:Send2TermConfig()
+command -bar -nargs=0 Send2TermRun call s:Send2TermRun()
 command -bar -nargs=0 Send2TermOpen call s:Send2TermOpen()
-command -bar -nargs=0 Send2TermCmd call s:Send2TermSetCmd()
+command -bar -nargs=0 Send2TermClose call s:Send2TermClose()
+command -bar -nargs=0 Send2TermToggle call s:Send2TermToggle()
+command -bar -nargs=0 Send2TermQuit call s:Send2TermQuit()
 command -range -bar -nargs=0 Send2TermSend <line1>,<line2>call s:Send2TermSendRange()
 command -nargs=+ Send2TermSend1 call s:Send2TermSend(<q-args>)
 
@@ -326,25 +364,33 @@ noremap <unique> <script> <silent> <Plug>Send2TermConfig :<c-u>Send2TermConfig<c
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
-  if !hasmapto('<Plug>Send2TermConfig', 'n')
-    nmap <buffer> <leader>sc <Plug>Send2TermConfig
+  if !hasmapto('<Plug>Send2TermToggle', 'n')
+    nmap <buffer> <leader>st <Plug>Send2TermToggle
   endif
 
   if !hasmapto('<Plug>Send2TermOpen', 'n')
-    nmap <buffer> <leader>so <Plug>Send2TermOpen
+    nmap <buffer> <leader>so <Plug>Send2TermToggle
+  endif
+
+  if !hasmapto('<Plug>Send2TermClose', 'n')
+    nmap <buffer> <leader>sc <Plug>Send2TermClose
+  endif
+
+  if !hasmapto('<Plug>Send2TermQuit', 'n')
+    nmap <buffer> <leader>sq <Plug>Send2TermQuit
   endif
 
   if !hasmapto('<Plug>Send2TermRegionSend', 'x')
-    xmap <buffer> <localleader>s  <Plug>Send2TermRegionSend
+    xmap <buffer> <leader>ss  <Plug>Send2TermRegionSend
     xmap <buffer> <c-e> <Plug>Send2TermRegionSend
   endif
 
   if !hasmapto('<Plug>Send2TermLineSend', 'n')
-    nmap <buffer> <localleader>ss  <Plug>Send2TermLineSend
+    nmap <buffer> <leader>sl <Plug>Send2TermLineSend
   endif
 
   if !hasmapto('<Plug>Send2TermParagraphSend', 'n')
-    nmap <buffer> <localleader>ss <Plug>Send2TermParagraphSend
+    nmap <buffer> <leader>ss <Plug>Send2TermParagraphSend
     nmap <buffer> <c-e> <Plug>Send2TermParagraphSend
   endif
 
