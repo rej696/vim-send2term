@@ -76,7 +76,7 @@ endfunction
 " Terminal
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-let s:send2term_term_prog = -1
+let s:send2term_term = -1
 
 " NVim and VIM8 Terminal Implementation
 " =====================================
