@@ -12,8 +12,8 @@ if !exists("g:send2term_paste_file")
     let g:send2term_paste_file = tempname()
 endif
 
-if !exists("g:send2term_default_config")
-    let g:send2term_default_config = { "socket_name": "default", "target_pane": ":0.1" }
+if !exists("g:send2term_toggle_default_cmd")
+    let g:send2term_toggle_default_cmd = 0
 endif
 
 if !exists("g:send2term_preserve_curpos")
@@ -109,7 +109,11 @@ function! s:TerminalToggle()
                 execute "close " . s:send2term_bufnr
             endif
         else
-            call s:TerminalRun()
+            if g:send2term_toggle_default_cmd == 1
+                call TerminalOpen(g:send2term_cmd)
+            else
+                call s:TerminalRun()
+            endif
         endif
     endif
 endfunction
@@ -320,7 +324,6 @@ noremap <unique> <script> <silent> <Plug>Send2TermRegionSend :<c-u>call <SID>Sen
 noremap <unique> <script> <silent> <Plug>Send2TermLineSend :<c-u>call <SID>Send2TermSendLines(v:count1)<cr>
 noremap <unique> <script> <silent> <Plug>Send2TermMotionSend <SID>Operator
 noremap <unique> <script> <silent> <Plug>Send2TermParagraphSend <SID>Operatorip
-noremap <unique> <script> <silent> <Plug>Send2TermConfig :<c-u>Send2TermConfig<cr>
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Mappings
