@@ -1,4 +1,7 @@
 
 0.1.0
-
 * fork [vim-tidal](https://github.com/tidalcycles/vim-tidal) v0.3.3 for sending data from editor window to terminal
+* remove tidalcycles functionality, keeping functionality to send text selections to integrated terminal
+* remove tmux integration (keeping only nvim/vim terminal integration
+* add terminal window/buffer management funcionality for neovim (toggle, close, quit etc.)
+

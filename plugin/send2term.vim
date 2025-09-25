@@ -64,7 +64,7 @@ function! s:TerminalOpen(cmd)
             :exe "normal G"
             :exe "normal 10\<c-w>_"
         else
-            echo "terminal window already open"
+            echoerr "terminal window already open"
         endif
 
         execute current_win .. "wincmd w"
@@ -115,6 +115,8 @@ function! s:TerminalToggle()
                 call s:TerminalRun()
             endif
         endif
+    else
+        echoerr "toggling terminal window only implemented for neovim"
     endif
 endfunction
 
@@ -123,8 +125,10 @@ function! s:TerminalClose()
         if s:send2term_term != -1 && s:send2term_bufnr != -1 && bufwinnr(s:send2term_bufnr) > 0
             execute "close " . s:send2term_bufnr
         else
-            echo "no terminal to close"
+            echoerr "no terminal to close"
         endif
+    else
+        echoerr "closeing terminal window only implemented for neovim"
     endif
 endfunction
 
@@ -134,6 +138,8 @@ function! s:TerminalQuit()
         let s:send2term_term = -1
         let s:send2term_bufnr = -1
         let s:send2term_cmd = -1
+    else
+        echoerr "quiting terminal window only implemented for neovim"
     endif
 endfunction
 
