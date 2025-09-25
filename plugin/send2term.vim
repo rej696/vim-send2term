@@ -2,7 +2,7 @@ if exists("g:loaded_send2term") || &cp || v:version < 700
     finish
 endif
 let g:loaded_send2term = 1
-
+let s:parent_path = fnamemodify(expand("<sfile>"), ":p:h:s?/plugin??")
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Default config
@@ -165,188 +165,200 @@ function! s:_EscapeText(text)
         let custom_escape = "_EscapeText_" . substitute(&filetype, "[.]", "_", "g")
         if exists("*" . custom_escape)
             let result = call(custom_escape, [a:text])
-            end
-            end
+        endif
+    endif
 
-            " use a:text if the ftplugin didn't kick in
-            if !exists("result")
-                let result = a:text
-                end
+    " use a:text if the ftplugin didn't kick in
+    if !exists("result")
+        let result = a:text
+    endif
 
-                " return an array, regardless
-                if type(result) == type("")
-                    return [result]
-                else
-                    return result
-                    end
-                endfunction
+    " return an array, regardless
+    if type(result) == type("")
+        return [result]
+    else
+        return result
+    endif
+endfunction
 
-                function! s:Send2TermFlashVisualSelection()
-                    " Redraw to show current visual selection, and sleep
-                    redraw
-                    execute "sleep " . g:send2term_flash_duration . " m"
-                    " Then leave visual mode
-                    silent exe "normal! vv"
-                endfunction
+function! s:Send2TermFlashVisualSelection()
+    " Redraw to show current visual selection, and sleep
+    redraw
+    execute "sleep " . g:send2term_flash_duration . " m"
+    " Then leave visual mode
+    silent exe "normal! vv"
+endfunction
 
-                function! s:Send2TermSendOp(type, ...) abort
+function! s:Send2TermSendOp(type, ...) abort
 
-                    let sel_save = &selection
-                    let &selection = "inclusive"
-                    let rv = getreg('"')
-                    let rt = getregtype('"')
+    let sel_save = &selection
+    let &selection = "inclusive"
+    let rv = getreg('"')
+    let rt = getregtype('"')
 
-                    if a:0  " Invoked from Visual mode, use '< and '> marks.
-                        silent exe "normal! `<" . a:type . '`>y'
-                    elseif a:type == 'line'
-                        silent exe "normal! '[V']y"
-                    elseif a:type == 'block'
-                        silent exe "normal! `[\<C-V>`]\y"
-                    else
-                        silent exe "normal! `[v`]y"
-                    endif
+    if a:0  " Invoked from Visual mode, use '< and '> marks.
+        silent exe "normal! `<" . a:type . '`>y'
+    elseif a:type == 'line'
+        silent exe "normal! '[V']y"
+    elseif a:type == 'block'
+        silent exe "normal! `[\<C-V>`]\y"
+    else
+        silent exe "normal! `[v`]y"
+    endif
 
-                    call setreg('"', @", 'V')
-                    call s:Send2TermSend(@")
+    call setreg('"', @", 'V')
+    call s:Send2TermSend(@")
 
-                    " Flash selection
-                    if a:type == 'line'
-                        silent exe "normal! '[V']"
-                        call s:Send2TermFlashVisualSelection()
-                    endif
+    " Flash selection
+    if a:type == 'line'
+        silent exe "normal! '[V']"
+        call s:Send2TermFlashVisualSelection()
+    endif
 
-                    let &selection = sel_save
-                    call setreg('"', rv, rt)
+    let &selection = sel_save
+    call setreg('"', rv, rt)
 
-                    call s:Send2TermRestoreCurPos()
-                endfunction
+    call s:Send2TermRestoreCurPos()
+endfunction
 
-                function! s:Send2TermSendRange() range abort
+function! s:Send2TermSendRange() range abort
 
-                    let rv = getreg('"')
-                    let rt = getregtype('"')
-                    silent execute a:firstline . ',' . a:lastline . 'yank'
-                    call s:Send2TermSend(@")
-                    call setreg('"', rv, rt)
-                endfunction
+    let rv = getreg('"')
+    let rt = getregtype('"')
+    silent execute a:firstline . ',' . a:lastline . 'yank'
+    call s:Send2TermSend(@")
+    call setreg('"', rv, rt)
+endfunction
 
-                function! s:Send2TermSendLines(count) abort
+function! s:Send2TermSendLines(count) abort
 
-                    let rv = getreg('"')
-                    let rt = getregtype('"')
+    let rv = getreg('"')
+    let rt = getregtype('"')
 
-                    silent execute "normal! " . a:count . "yy"
+    silent execute "normal! " . a:count . "yy"
 
-                    call s:Send2TermSend(@")
-                    call setreg('"', rv, rt)
+    call s:Send2TermSend(@")
+    call setreg('"', rv, rt)
 
-                    " Flash lines
-                    silent execute "normal! V"
-                    if a:count > 1
-                        silent execute "normal! " . (a:count - 1) . "\<Down>"
-                    endif
-                    call s:Send2TermFlashVisualSelection()
-                endfunction
+    " Flash lines
+    silent execute "normal! V"
+    if a:count > 1
+        silent execute "normal! " . (a:count - 1) . "\<Down>"
+    endif
+    call s:Send2TermFlashVisualSelection()
+endfunction
 
-                function! s:Send2TermStoreCurPos()
-                    if g:send2term_preserve_curpos == 1
-                        if exists("*getcurpos")
-                            let s:cur = getcurpos()
-                        else
-                            let s:cur = getpos('.')
-                        endif
-                    endif
-                endfunction
+function! s:Send2TermStoreCurPos()
+    if g:send2term_preserve_curpos == 1
+        if exists("*getcurpos")
+            let s:cur = getcurpos()
+        else
+            let s:cur = getpos('.')
+        endif
+    endif
+endfunction
 
-                function! s:Send2TermRestoreCurPos()
-                    if g:send2term_preserve_curpos == 1
-                        call setpos('.', s:cur)
-                    endif
-                endfunction
+function! s:Send2TermRestoreCurPos()
+    if g:send2term_preserve_curpos == 1
+        call setpos('.', s:cur)
+    endif
+endfunction
 
-                """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-                " Public interface
-                """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Public interface
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-                function! s:Send2TermSend(text)
-                    let pieces = s:_EscapeText(a:text)
-                    for piece in pieces
-                        call s:TerminalSend(piece)
-                    endfor
-                endfunction
+function! s:Send2TermSend(text)
+    let pieces = s:_EscapeText(a:text)
+    for piece in pieces
+        call s:TerminalSend(piece)
+    endfor
+endfunction
 
-                function! s:Send2TermOpen() abort
-                    call inputsave()
-                    call s:TerminalOpen(g:send2term_cmd)
-                    call inputrestore()
-                endfunction
+function! s:Send2TermOpen() abort
+    call inputsave()
+    call s:TerminalOpen(g:send2term_cmd)
+    call inputrestore()
+endfunction
 
-                function! s:Send2TermRun() abort
-                    call inputsave()
-                    call s:TerminalRun()
-                    call inputrestore()
-                endfunction
+function! s:Send2TermRun() abort
+    call inputsave()
+    call s:TerminalRun()
+    call inputrestore()
+endfunction
 
-                function! s:Send2TermToggle() abort
-                    call inputsave()
-                    call s:TerminalToggle()
-                    call inputrestore()
-                endfunction
+function! s:Send2TermToggle() abort
+    call inputsave()
+    call s:TerminalToggle()
+    call inputrestore()
+endfunction
 
-                """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-                " Setup key bindings
-                """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! s:Send2TermClose() abort
+    call inputsave()
+    call s:TerminalClose()
+    call inputrestore()
+endfunction
 
-                command -bar -nargs=0 Send2TermRun call s:Send2TermRun()
-                command -bar -nargs=0 Send2TermOpen call s:Send2TermOpen()
-                command -bar -nargs=0 Send2TermClose call s:Send2TermClose()
-                command -bar -nargs=0 Send2TermToggle call s:Send2TermToggle()
-                command -bar -nargs=0 Send2TermQuit call s:Send2TermQuit()
-                command -range -bar -nargs=0 Send2TermSend <line1>,<line2>call s:Send2TermSendRange()
-                command -nargs=+ Send2TermSend1 call s:Send2TermSend(<q-args>)
+function! s:Send2TermQuit() abort
+    call inputsave()
+    call s:TerminalQuit()
+    call inputrestore()
+endfunction
 
-                noremap <SID>Operator :<c-u>call <SID>Send2TermStoreCurPos()<cr>:set opfunc=<SID>Send2TermSendOp<cr>g@
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Setup key bindings
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-                noremap <unique> <script> <silent> <Plug>Send2TermRegionSend :<c-u>call <SID>Send2TermSendOp(visualmode(), 1)<cr>
-                noremap <unique> <script> <silent> <Plug>Send2TermLineSend :<c-u>call <SID>Send2TermSendLines(v:count1)<cr>
-                noremap <unique> <script> <silent> <Plug>Send2TermMotionSend <SID>Operator
-                noremap <unique> <script> <silent> <Plug>Send2TermParagraphSend <SID>Operatorip
-                noremap <unique> <script> <silent> <Plug>Send2TermConfig :<c-u>Send2TermConfig<cr>
+command -bar -nargs=0 Send2TermRun call s:Send2TermRun()
+command -bar -nargs=0 Send2TermOpen call s:Send2TermOpen()
+command -bar -nargs=0 Send2TermClose call s:Send2TermClose()
+command -bar -nargs=0 Send2TermToggle call s:Send2TermToggle()
+command -bar -nargs=0 Send2TermQuit call s:Send2TermQuit()
+command -range -bar -nargs=0 Send2TermSend <line1>,<line2>call s:Send2TermSendRange()
+command -nargs=+ Send2TermSend1 call s:Send2TermSend(<q-args>)
 
-                """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-                " Mappings
-                """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+noremap <SID>Operator :<c-u>call <SID>Send2TermStoreCurPos()<cr>:set opfunc=<SID>Send2TermSendOp<cr>g@
 
-                if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
-                    if !hasmapto('<Plug>Send2TermToggle', 'n')
-                        nmap <buffer> <leader>st <Plug>Send2TermToggle
-                    endif
+noremap <unique> <script> <silent> <Plug>Send2TermRegionSend :<c-u>call <SID>Send2TermSendOp(visualmode(), 1)<cr>
+noremap <unique> <script> <silent> <Plug>Send2TermLineSend :<c-u>call <SID>Send2TermSendLines(v:count1)<cr>
+noremap <unique> <script> <silent> <Plug>Send2TermMotionSend <SID>Operator
+noremap <unique> <script> <silent> <Plug>Send2TermParagraphSend <SID>Operatorip
+noremap <unique> <script> <silent> <Plug>Send2TermConfig :<c-u>Send2TermConfig<cr>
 
-                    if !hasmapto('<Plug>Send2TermOpen', 'n')
-                        nmap <buffer> <leader>so <Plug>Send2TermToggle
-                    endif
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Mappings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-                    if !hasmapto('<Plug>Send2TermClose', 'n')
-                        nmap <buffer> <leader>sc <Plug>Send2TermClose
-                    endif
+if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
+    if !hasmapto('<Plug>Send2TermToggle', 'n')
+        nmap <buffer> <leader>st <Plug>Send2TermToggle
+    endif
 
-                    if !hasmapto('<Plug>Send2TermQuit', 'n')
-                        nmap <buffer> <leader>sq <Plug>Send2TermQuit
-                    endif
+    if !hasmapto('<Plug>Send2TermOpen', 'n')
+        nmap <buffer> <leader>so <Plug>Send2TermToggle
+    endif
 
-                    if !hasmapto('<Plug>Send2TermRegionSend', 'x')
-                        xmap <buffer> <leader>ss  <Plug>Send2TermRegionSend
-                        xmap <buffer> <c-e> <Plug>Send2TermRegionSend
-                    endif
+    if !hasmapto('<Plug>Send2TermClose', 'n')
+        nmap <buffer> <leader>sc <Plug>Send2TermClose
+    endif
 
-                    if !hasmapto('<Plug>Send2TermLineSend', 'n')
-                        nmap <buffer> <leader>sl <Plug>Send2TermLineSend
-                    endif
+    if !hasmapto('<Plug>Send2TermQuit', 'n')
+        nmap <buffer> <leader>sq <Plug>Send2TermQuit
+    endif
 
-                    if !hasmapto('<Plug>Send2TermParagraphSend', 'n')
-                        nmap <buffer> <leader>ss <Plug>Send2TermParagraphSend
-                        nmap <buffer> <c-e> <Plug>Send2TermParagraphSend
-                    endif
+    if !hasmapto('<Plug>Send2TermRegionSend', 'x')
+        xmap <buffer> <leader>ss  <Plug>Send2TermRegionSend
+        xmap <buffer> <c-e> <Plug>Send2TermRegionSend
+    endif
 
-                    imap <buffer> <c-e> <Esc><Plug>Send2TermParagraphSend<Esc>i<Right>
-                endif
+    if !hasmapto('<Plug>Send2TermLineSend', 'n')
+        nmap <buffer> <leader>sl <Plug>Send2TermLineSend
+    endif
+
+    if !hasmapto('<Plug>Send2TermParagraphSend', 'n')
+        nmap <buffer> <leader>ss <Plug>Send2TermParagraphSend
+        nmap <buffer> <c-e> <Plug>Send2TermParagraphSend
+    endif
+
+    imap <buffer> <c-e> <Esc><Plug>Send2TermParagraphSend<Esc>i<Right>
+endif
