@@ -57,7 +57,7 @@ function! s:TerminalOpen(cmd)
             " Make terminal scroll to follow output
             :exe "normal G"
             :exe "normal 10\<c-w>_"
-        elseif !bufwinnr(s:send2term_bufnr)
+        elseif bufwinnr(s:send2term_bufnr) <= 0
             execute "sbuffer " . s:send2term_bufnr
 
             " Give the terminal a moment to start up so following commands can take effect
@@ -98,7 +98,7 @@ endfunction
 function! s:TerminalToggle()
     if has('nvim')
         if s:send2term_term != -1 && s:send2term_bufnr != -1
-            if !bufwinnr(s:send2term_bufnr)
+            if bufwinnr(s:send2term_bufnr) <= 0
                 let current_win = winnr()
                 execute "sbuffer " . s:send2term_bufnr
 
