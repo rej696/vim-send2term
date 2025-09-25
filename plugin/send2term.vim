@@ -33,7 +33,7 @@ if !exists("g:send2term_flash_duration")
 endif
 
 if !exists("g:send2term_prog")
-  let g:send2term_ghci = "bash"
+  let g:send2term_prog = "bash"
 endif
 
 
