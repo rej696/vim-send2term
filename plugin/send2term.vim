@@ -129,7 +129,7 @@ endfunction
 
 function! s:TerminalQuit()
     if has('nvim')
-        execute "bd " . s:send2term_bufnr
+        execute "bd! " . s:send2term_bufnr
         let s:send2term_term = -1
         let s:send2term_bufnr = -1
         let s:send2term_cmd = -1
@@ -309,13 +309,13 @@ endfunction
 " Setup key bindings
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-command -bar -nargs=0 Send2TermRun call s:Send2TermRun()
-command -bar -nargs=0 Send2TermOpen call s:Send2TermOpen()
-command -bar -nargs=0 Send2TermClose call s:Send2TermClose()
-command -bar -nargs=0 Send2TermToggle call s:Send2TermToggle()
-command -bar -nargs=0 Send2TermQuit call s:Send2TermQuit()
-command -range -bar -nargs=0 Send2TermSend <line1>,<line2>call s:Send2TermSendRange()
-command -nargs=+ Send2TermSend1 call s:Send2TermSend(<q-args>)
+command -bar -nargs=0 TermRun call s:Send2TermRun()
+command -bar -nargs=0 TermOpen call s:Send2TermOpen()
+command -bar -nargs=0 TermClose call s:Send2TermClose()
+command -bar -nargs=0 TermToggle call s:Send2TermToggle()
+command -bar -nargs=0 TermQuit call s:Send2TermQuit()
+command -range -bar -nargs=0 TermSend <line1>,<line2>call s:Send2TermSendRange()
+command -nargs=+ TermSend1 call s:Send2TermSend(<q-args>)
 
 noremap <SID>Operator :<c-u>call <SID>Send2TermStoreCurPos()<cr>:set opfunc=<SID>Send2TermSendOp<cr>g@
 
@@ -330,20 +330,20 @@ noremap <unique> <script> <silent> <Plug>Send2TermConfig :<c-u>Send2TermConfig<c
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
-    if !hasmapto('<Plug>Send2TermToggle', 'n')
-        nmap <buffer> <leader>st <Plug>Send2TermToggle
+    if !hasmapto('<Cmd>TermToggle', 'n')
+        nmap <buffer> <leader>st <Cmd>TermToggle<CR>
     endif
 
-    if !hasmapto('<Plug>Send2TermOpen', 'n')
-        nmap <buffer> <leader>so <Plug>Send2TermToggle
+    if !hasmapto('<Cmd>TermOpen', 'n')
+        nmap <buffer> <leader>so <Cmd>TermOpen<CR>
     endif
 
-    if !hasmapto('<Plug>Send2TermClose', 'n')
-        nmap <buffer> <leader>sc <Plug>Send2TermClose
+    if !hasmapto('<Cmd>TermClose', 'n')
+        nmap <buffer> <leader>sc <Cmd>TermClose<CR>
     endif
 
-    if !hasmapto('<Plug>Send2TermQuit', 'n')
-        nmap <buffer> <leader>sq <Plug>Send2TermQuit
+    if !hasmapto('<Cmd>TermQuit', 'n')
+        nmap <buffer> <leader>sq <Cmd>TermQuit<CR>
     endif
 
     if !hasmapto('<Plug>Send2TermRegionSend', 'x')
