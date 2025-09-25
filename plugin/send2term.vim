@@ -60,12 +60,11 @@ function! s:TerminalOpen(cmd)
         elseif bufwinnr(s:send2term_bufnr) <= 0
             execute "sbuffer " . s:send2term_bufnr
 
-            " Give the terminal a moment to start up so following commands can take effect
-            sleep 500m
-
             " Make terminal scroll to follow output
             :exe "normal G"
             :exe "normal 10\<c-w>_"
+        else
+            echo "terminal window already open"
         endif
 
         execute current_win .. "wincmd w"
@@ -102,9 +101,6 @@ function! s:TerminalToggle()
                 let current_win = winnr()
                 execute "sbuffer " . s:send2term_bufnr
 
-                " Give the terminal a moment to start up so following commands can take effect
-                sleep 500m
-
                 " Make terminal scroll to follow output
                 :exe "normal G"
                 :exe "normal 10\<c-w>_"
@@ -120,10 +116,11 @@ endfunction
 
 function! s:TerminalClose()
     if has('nvim')
-        if s:send2term_term != -1 && s:send2term_bufnr != -1
+        if s:send2term_term != -1 && s:send2term_bufnr != -1 && bufwinnr(s:send2term_bufnr) > 0
             execute "close " . s:send2term_bufnr
+        else
+            echo "no terminal to close"
         endif
-
     endif
 endfunction
 
