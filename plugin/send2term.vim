@@ -8,14 +8,6 @@ let s:parent_path = fnamemodify(expand("<sfile>"), ":p:h:s?/plugin??")
 " Default config
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-if !exists("g:send2term_target")
-  if has('nvim') || has('terminal')
-    let g:send2term_target = "terminal"
-  else
-    let g:send2term_target = "tmux"
-  endif
-endif
-
 if !exists("g:send2term_paste_file")
   let g:send2term_paste_file = tempname()
 endif
@@ -35,44 +27,6 @@ endif
 if !exists("g:send2term_cmd")
   let g:send2term_cmd = "bash"
 endif
-
-
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Tmux
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-function! s:TmuxSend(config, text)
-  let l:prefix = "tmux -L " . shellescape(a:config["socket_name"])
-  " use STDIN unless configured to use a file
-  if !exists("g:send2term_paste_file")
-    call system(l:prefix . " load-buffer -", a:text)
-  else
-    call s:WritePasteFile(a:text)
-    call system(l:prefix . " load-buffer " . g:send2term_paste_file)
-  end
-  call system(l:prefix . " paste-buffer -d -t " . shellescape(a:config["target_pane"]))
-endfunction
-
-function! s:TmuxPaneNames(A,L,P)
-  let format = '#{pane_id} #{session_name}:#{window_index}.#{pane_index} #{window_name}#{?window_active, (active),}'
-  return system("tmux -L " . shellescape(b:send2term_config['socket_name']) . " list-panes -a -F " . shellescape(format))
-endfunction
-
-function! s:TmuxConfig() abort
-  if !exists("b:send2term_config")
-    let b:send2term_config = {"socket_name": "default", "target_pane": ":"}
-  end
-
-  let b:send2term_config["socket_name"] = input("tmux socket name: ", b:send2term_config["socket_name"])
-  let b:send2term_config["target_pane"] = input("tmux target pane: ", b:send2term_config["target_pane"], "custom,<SNR>" . s:SID() . "_TmuxPaneNames")
-  if b:send2term_config["target_pane"] =~ '\s\+'
-    let b:send2term_config["target_pane"] = split(b:send2term_config["target_pane"])[0]
-  endif
-endfunction
-
-function! s:TmuxOpen() abort
-endfunction
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -199,7 +153,7 @@ endfunction
 
 function! s:SID()
   return matchstr(expand('<sfile>'), '<SNR>\zs\d\+\ze_SID$')
-endfun
+endfunction
 
 function! s:WritePasteFile(text)
   " could check exists("*writefile")
