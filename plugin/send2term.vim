@@ -334,6 +334,10 @@ if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
         nmap <buffer> <leader>st <Cmd>TermToggle<CR>
     endif
 
+    if !hasmapto('<Cmd>TermRun', 'n')
+        nmap <buffer> <leader>sr <Cmd>TermRun<CR>
+    endif
+
     if !hasmapto('<Cmd>TermOpen', 'n')
         nmap <buffer> <leader>so <Cmd>TermOpen<CR>
     endif

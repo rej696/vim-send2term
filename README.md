@@ -36,6 +36,7 @@ Using one of these key bindings you can send lines to Send2Term:
 * `<leader>ss`: Send current visually selected block or current inner paragraph
 * `<leader>sl`: Send current line
 * `<leader>st`: run `:TermToggle`
+* `<leader>sr`: run `:TermRun`
 * `<leader>so`: run `:TermOpen`
 * `<leader>sc`: run `:TermClose`
 * `<leader>sq`: run `:TermQuit`
