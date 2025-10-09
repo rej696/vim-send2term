@@ -35,6 +35,7 @@ Using one of these key bindings you can send lines to Send2Term:
 * `<c-e>` (Control+E): Send current inner paragraph.
 * `<leader>ss`: Send current visually selected block or current inner paragraph
 * `<leader>sl`: Send current line
+* `<leader>se<motion>`: Send the selection motion (i.e. <leader>seip will replicate the behaviour of <leader>ss)
 * `<leader>st`: run `:TermToggle`
 * `<leader>sr`: run `:TermRun`
 * `<leader>so`: run `:TermOpen`

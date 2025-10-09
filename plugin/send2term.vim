@@ -44,6 +44,13 @@ function! s:TerminalOpen(cmd)
         let current_win = winnr()
 
         if s:send2term_term == -1 || s:send2term_bufnr == -1
+            if exists("&filetype")
+                let custom_open = "_TerminalOpen_" . substitute(&filetype, "[.]", "_", "g")
+                if exists("*" . custom_open)
+                    call call(custom_open, [a:cmd])
+                endif
+            endif
+
             " force terminal split to open below current pane
             :exe "set splitbelow"
             execute "split term://" . a:cmd
@@ -366,6 +373,10 @@ if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
     if !hasmapto('<Plug>Send2TermParagraphSend', 'n')
         nmap <leader>ss <Plug>Send2TermParagraphSend
         nmap <c-e> <Plug>Send2TermParagraphSend
+    endif
+
+    if !hasmapto('<Plug>Send2TermMotionSend', 'n')
+        nmap <leader>se <Plug>Send2TermMotionSend
     endif
 
     imap <c-e> <Esc><Plug>Send2TermParagraphSend<Esc>i<Right>
