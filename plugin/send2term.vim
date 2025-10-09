@@ -63,8 +63,6 @@ function! s:TerminalOpen(cmd)
             " Make terminal scroll to follow output
             :exe "normal G"
             :exe "normal 10\<c-w>_"
-        else
-            echoerr "terminal window already open"
         endif
 
         execute current_win .. "wincmd w"
@@ -337,38 +335,38 @@ noremap <unique> <script> <silent> <Plug>Send2TermParagraphSend <SID>Operatorip
 
 if !exists("g:send2term_no_mappings") || !g:send2term_no_mappings
     if !hasmapto('<Cmd>TermToggle', 'n')
-        nmap <buffer> <leader>st <Cmd>TermToggle<CR>
+        nmap <leader>st <Cmd>TermToggle<CR>
     endif
 
     if !hasmapto('<Cmd>TermRun', 'n')
-        nmap <buffer> <leader>sr <Cmd>TermRun<CR>
+        nmap <leader>sr <Cmd>TermRun<CR>
     endif
 
     if !hasmapto('<Cmd>TermOpen', 'n')
-        nmap <buffer> <leader>so <Cmd>TermOpen<CR>
+        nmap <leader>so <Cmd>TermOpen<CR>
     endif
 
     if !hasmapto('<Cmd>TermClose', 'n')
-        nmap <buffer> <leader>sc <Cmd>TermClose<CR>
+        nmap <leader>sc <Cmd>TermClose<CR>
     endif
 
     if !hasmapto('<Cmd>TermQuit', 'n')
-        nmap <buffer> <leader>sq <Cmd>TermQuit<CR>
+        nmap <leader>sq <Cmd>TermQuit<CR>
     endif
 
     if !hasmapto('<Plug>Send2TermRegionSend', 'x')
-        xmap <buffer> <leader>ss  <Plug>Send2TermRegionSend
-        xmap <buffer> <c-e> <Plug>Send2TermRegionSend
+        xmap <leader>ss  <Plug>Send2TermRegionSend
+        xmap <c-e> <Plug>Send2TermRegionSend
     endif
 
     if !hasmapto('<Plug>Send2TermLineSend', 'n')
-        nmap <buffer> <leader>sl <Plug>Send2TermLineSend
+        nmap <leader>sl <Plug>Send2TermLineSend
     endif
 
     if !hasmapto('<Plug>Send2TermParagraphSend', 'n')
-        nmap <buffer> <leader>ss <Plug>Send2TermParagraphSend
-        nmap <buffer> <c-e> <Plug>Send2TermParagraphSend
+        nmap <leader>ss <Plug>Send2TermParagraphSend
+        nmap <c-e> <Plug>Send2TermParagraphSend
     endif
 
-    imap <buffer> <c-e> <Esc><Plug>Send2TermParagraphSend<Esc>i<Right>
+    imap <c-e> <Esc><Plug>Send2TermParagraphSend<Esc>i<Right>
 endif
