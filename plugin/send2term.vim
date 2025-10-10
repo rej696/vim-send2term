@@ -331,8 +331,8 @@ command -nargs=+ TermSend1 call s:Send2TermSend(<q-args>)
 
 noremap <SID>Operator :<c-u>call <SID>Send2TermStoreCurPos()<cr>:set opfunc=<SID>Send2TermSendOp<cr>g@
 
-noremap <unique> <script> <silent> <Plug>Send2TermRegionSend :<c-u>call <SID>Send2TermSendOp(visualmode(), 1)<cr>
-noremap <unique> <script> <silent> <Plug>Send2TermLineSend :<c-u>call <SID>Send2TermSendLines(v:count1)<cr>
+noremap <unique> <script> <silent> <Plug>Send2TermRegionSend :<c-u>call <SID>Send2TermStoreCurPos()<cr>:<c-u>call <SID>Send2TermSendOp(visualmode(), 1)<cr>
+noremap <unique> <script> <silent> <Plug>Send2TermLineSend :<c-u>call <SID>Send2TermStoreCurPos()<cr>:<c-u>call <SID>Send2TermSendLines(v:count1)<cr>
 noremap <unique> <script> <silent> <Plug>Send2TermMotionSend <SID>Operator
 noremap <unique> <script> <silent> <Plug>Send2TermParagraphSend <SID>Operatorip
 
